@@ -121,6 +121,7 @@ destroy_addr(addr)
 			free(addr->ac_taddr->buf);
 			addr->ac_taddr->buf = NULL;
 		}
+		free(addr->ac_taddr);
 		addr->ac_taddr = NULL;
 	}
 	free(addr);
