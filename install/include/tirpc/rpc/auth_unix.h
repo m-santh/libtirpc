@@ -24,57 +24,63 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- */
-/*
- * Copyright (c) 1986 - 1991 by Sun Microsystems, Inc.
- */
-
-/*
- * rpc_com.h, Common definitions for both the server and client side.
- * All for the topmost layer of rpc
  *
- * In Sun's tirpc distribution, this was installed as <rpc/rpc_com.h>,
- * but as it contains only non-exported interfaces, it was moved here.
+ *	from: @(#)auth_unix.h 1.8 88/02/08 SMI
+ *	from: @(#)auth_unix.h	2.2 88/07/29 4.0 RPCSRC
+ * $FreeBSD: src/include/rpc/auth_unix.h,v 1.11 2002/03/23 17:24:55 imp Exp $
  */
 
-#ifndef _TIRPC_RPCCOM_H
-#define	_TIRPC_RPCCOM_H
+/*
+ * auth_unix.h, Protocol for UNIX style authentication parameters for RPC
+ *
+ * Copyright (C) 1984, Sun Microsystems, Inc.
+ */
 
-#include <rpc/rpc_com.h>
+/*
+ * The system is very weak.  The client uses no encryption for  it
+ * credentials and only sends null verifiers.  The server sends backs
+ * null verifiers or optionally a verifier that suggests a new short hand
+ * for the credentials.
+ */
+
+#ifndef _TIRPC_AUTH_UNIX_H
+#define _TIRPC_AUTH_UNIX_H
+
+/* The machine name is part of a credential; it may not exceed 255 bytes */
+#define MAX_MACHINE_NAME 255
+
+/* gids compose part of a credential; there may not be more than 16 of them */
+#define NGRPS 16
+
+/*
+ * Unix style credentials.
+ */
+struct authunix_parms {
+	u_long	 aup_time;
+	char	*aup_machname;
+	uid_t 	 aup_uid;
+	gid_t  	 aup_gid;
+	u_int	 aup_len;
+	gid_t 	*aup_gids;
+};
+
+#define authsys_parms authunix_parms
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-struct netbuf *__rpc_set_netbuf(struct netbuf *, const void *, size_t);
-
-struct netbuf *__rpcb_findaddr_timed(rpcprog_t, rpcvers_t,
-    const struct netconfig *, const char *host, CLIENT **clpp,
-    struct timeval *tp);
-
-bool_t __rpc_control(int,void *);
-
-bool_t __svc_clean_idle(fd_set *, int, bool_t);
-bool_t __xdrrec_setnonblock(XDR *, int);
-bool_t __xdrrec_getrec(XDR *, enum xprt_stat *, bool_t);
-void __xprt_unregister_unlocked(SVCXPRT *);
-void __xprt_set_raddr(SVCXPRT *, const struct sockaddr_storage *);
-
-/* Evaluate to actual length of the `sockaddr_un' structure, whether
- * abstract or not.
- */
-#include <stddef.h>
-#define SUN_LEN_A(ptr) (offsetof(struct sockaddr_un, sun_path)	\
-			+ 1 + strlen((ptr)->sun_path + 1))
-
-extern int __svc_maxrec;
-
-extern int __svc_mtmode;
-extern int __svc_thrmax;
-extern int __svc_idlecleanup;
-
+extern bool_t xdr_authunix_parms(XDR *, struct authunix_parms *);
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _TIRPC_RPCCOM_H */
+/*
+ * If a response verifier has flavor AUTH_SHORT,
+ * then the body of the response verifier encapsulates the following structure;
+ * again it is serialized in the obvious fashion.
+ */
+struct short_hand_verf {
+	struct opaque_auth new_cred;
+};
+
+#endif /* !_TIRPC_AUTH_UNIX_H */

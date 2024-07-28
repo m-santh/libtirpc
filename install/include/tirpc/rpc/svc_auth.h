@@ -1,3 +1,5 @@
+/*	$NetBSD: svc_auth.h,v 1.8 2000/06/02 22:57:57 fvdl Exp $	*/
+
 /*
  * Copyright (c) 2009, Sun Microsystems, Inc.
  * All rights reserved.
@@ -24,57 +26,56 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- */
-/*
- * Copyright (c) 1986 - 1991 by Sun Microsystems, Inc.
- */
-
-/*
- * rpc_com.h, Common definitions for both the server and client side.
- * All for the topmost layer of rpc
  *
- * In Sun's tirpc distribution, this was installed as <rpc/rpc_com.h>,
- * but as it contains only non-exported interfaces, it was moved here.
+ *	from: @(#)svc_auth.h 1.6 86/07/16 SMI
+ *	@(#)svc_auth.h	2.1 88/07/29 4.0 RPCSRC
+ * $FreeBSD: src/include/rpc/svc_auth.h,v 1.14 2002/03/23 17:24:55 imp Exp $
  */
 
-#ifndef _TIRPC_RPCCOM_H
-#define	_TIRPC_RPCCOM_H
+/*
+ * svc_auth.h, Service side of rpc authentication.
+ *
+ * Copyright (C) 1984, Sun Microsystems, Inc.
+ */
 
-#include <rpc/rpc_com.h>
+#ifndef _RPC_SVC_AUTH_H
+#define _RPC_SVC_AUTH_H
 
+/*
+ * Interface to server-side authentication flavors.
+ */
+typedef struct SVCAUTH {
+	struct svc_auth_ops {
+		int     (*svc_ah_wrap)(struct SVCAUTH *, XDR *, xdrproc_t,
+				       caddr_t);
+		int     (*svc_ah_unwrap)(struct SVCAUTH *, XDR *, xdrproc_t,
+					 caddr_t);
+		int     (*svc_ah_destroy)(struct SVCAUTH *);
+		} *svc_ah_ops;
+	caddr_t svc_ah_private;
+} SVCAUTH;
+
+#define SVCAUTH_WRAP(auth, xdrs, xfunc, xwhere) \
+	((*((auth)->svc_ah_ops->svc_ah_wrap))(auth, xdrs, xfunc, xwhere))
+#define SVCAUTH_UNWRAP(auth, xdrs, xfunc, xwhere) \
+	((*((auth)->svc_ah_ops->svc_ah_unwrap))(auth, xdrs, xfunc, xwhere))
+#define SVCAUTH_DESTROY(auth) \
+	((*((auth)->svc_ah_ops->svc_ah_destroy))(auth))
+
+/*
+ * Server side authenticator
+ */
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-struct netbuf *__rpc_set_netbuf(struct netbuf *, const void *, size_t);
-
-struct netbuf *__rpcb_findaddr_timed(rpcprog_t, rpcvers_t,
-    const struct netconfig *, const char *host, CLIENT **clpp,
-    struct timeval *tp);
-
-bool_t __rpc_control(int,void *);
-
-bool_t __svc_clean_idle(fd_set *, int, bool_t);
-bool_t __xdrrec_setnonblock(XDR *, int);
-bool_t __xdrrec_getrec(XDR *, enum xprt_stat *, bool_t);
-void __xprt_unregister_unlocked(SVCXPRT *);
-void __xprt_set_raddr(SVCXPRT *, const struct sockaddr_storage *);
-
-/* Evaluate to actual length of the `sockaddr_un' structure, whether
- * abstract or not.
- */
-#include <stddef.h>
-#define SUN_LEN_A(ptr) (offsetof(struct sockaddr_un, sun_path)	\
-			+ 1 + strlen((ptr)->sun_path + 1))
-
-extern int __svc_maxrec;
-
-extern int __svc_mtmode;
-extern int __svc_thrmax;
-extern int __svc_idlecleanup;
+extern enum auth_stat _gss_authenticate(struct svc_req *, struct rpc_msg *,
+		bool_t *);
+extern enum auth_stat _authenticate(struct svc_req *, struct rpc_msg *);
+extern int svc_auth_reg(int, enum auth_stat (*)(struct svc_req *,
+			  struct rpc_msg *));
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _TIRPC_RPCCOM_H */
+#endif /* !_RPC_SVC_AUTH_H */

@@ -1,5 +1,8 @@
+/*	$NetBSD: raw.h,v 1.1 2000/06/02 22:57:56 fvdl Exp $	*/
+/*	$FreeBSD: src/include/rpc/raw.h,v 1.1 2001/03/19 12:49:47 alfred Exp $ */
+
 /*
- * Copyright (c) 2015, Axentia Technologies AB.
+ * Copyright (c) 2009, Sun Microsystems, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,6 +12,9 @@
  * - Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
+ * - Neither the name of Sun Microsystems, Inc. nor the names of its
+ *   contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -21,57 +27,31 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
  */
+/*
+ * Copyright (c) 1986 - 1991 by Sun Microsystems, Inc.
+ */
+
+#ifndef _RPC_RAW_H
+#define	_RPC_RAW_H
+
+/* 	from: @(#)raw.h	1.11	94/04/25 SMI */
+/*	from: @(#)raw.h 1.2 88/10/25 SMI	*/
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 /*
- * svc_mt.h, Server-side transport extensions
+ * raw.h
+ *
+ * Raw interface
+ * The common memory area over which they will communicate
  */
+extern char *__rpc_rawcombuf;
 
-#ifndef _TIRPC_SVC_MT_H
-#define _TIRPC_SVC_MT_H
+#ifdef	__cplusplus
+}
+#endif
 
-#include <semaphore.h>
-
-typedef struct __rpc_svcxprt_ext {
-	int 		flags;
-	SVCAUTH		xp_auth;
-	void            *prv;
-} SVCXPRT_EXT;
-
-typedef enum {
-    THREAD_IDLE,
-    THREAD_PENDING,
-    THREAD_WIP,
-    THREAD_KILL
-} ThreadState;
-
-
-typedef struct __rpc_svcxprt_ext_prv {
-       int             fd;
-       ThreadState     state;
-       pthread_t       thread_id;
-       pthread_attr_t  attr;
-       pthread_mutex_t mutex;
-       pthread_cond_t cond;
-} SVCXPRT_EXT_PRV;
-
-
-#define SVCEXT(xprt)					\
-	((SVCXPRT_EXT *)(xprt)->xp_p3)
-
-#define SVC_XP_PRV(xprt)                               \
-       (SVCEXT(xprt)->prv)
-
-#define SVC_XP_AUTH(xprt)				\
-	(SVCEXT(xprt)->xp_auth)
-
-#define SVC_VERSQUIET 0x0001	/* keep quiet about version mismatch */
-
-#define svc_flags(xprt)					\
-	(SVCEXT(xprt)->flags)
-
-#define version_keepquiet(xprt)				\
-	(svc_flags(xprt) & SVC_VERSQUIET)
-
-#endif /* !_TIRPC_SVC_MT_H */
+#endif	/* _RPC_RAW_H */

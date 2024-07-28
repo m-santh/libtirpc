@@ -1,3 +1,6 @@
+/*	$NetBSD: rpcent.h,v 1.1 2000/06/02 22:57:56 fvdl Exp $	*/
+/*	$FreeBSD: src/include/rpc/rpcent.h,v 1.2 2002/03/23 17:24:55 imp Exp $ */
+
 /*
  * Copyright (c) 2009, Sun Microsystems, Inc.
  * All rights reserved.
@@ -30,51 +33,41 @@
  */
 
 /*
- * rpc_com.h, Common definitions for both the server and client side.
- * All for the topmost layer of rpc
+ * rpcent.h,
+ * For converting rpc program numbers to names etc.
  *
- * In Sun's tirpc distribution, this was installed as <rpc/rpc_com.h>,
- * but as it contains only non-exported interfaces, it was moved here.
  */
 
-#ifndef _TIRPC_RPCCOM_H
-#define	_TIRPC_RPCCOM_H
+#ifndef _RPC_RPCENT_H
+#define _RPC_RPCENT_H
 
-#include <rpc/rpc_com.h>
+/*	#pragma ident "@(#)rpcent.h   1.13    94/04/25 SMI"	*/
+/*      @(#)rpcent.h 1.1 88/12/06 SMI   */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct netbuf *__rpc_set_netbuf(struct netbuf *, const void *, size_t);
+/* These are defined in /usr/include/rpc/netdb.h, unless we are using
+   the C library without RPC support. */
+#if defined(__UCLIBC__) && !defined(__UCLIBC_HAS_RPC__) || !defined(__GLIBC__)
+struct rpcent {
+	char	*r_name;	/* name of server for this rpc program */
+	char	**r_aliases;	/* alias list */
+	int	r_number;	/* rpc program number */
+};
 
-struct netbuf *__rpcb_findaddr_timed(rpcprog_t, rpcvers_t,
-    const struct netconfig *, const char *host, CLIENT **clpp,
-    struct timeval *tp);
+/* Old interfaces that return a pointer to a static area;  MT-unsafe */
+extern struct rpcent *getrpcbyname(const char *);
+extern struct rpcent *getrpcbynumber(int);
+extern struct rpcent *getrpcent(void);
 
-bool_t __rpc_control(int,void *);
-
-bool_t __svc_clean_idle(fd_set *, int, bool_t);
-bool_t __xdrrec_setnonblock(XDR *, int);
-bool_t __xdrrec_getrec(XDR *, enum xprt_stat *, bool_t);
-void __xprt_unregister_unlocked(SVCXPRT *);
-void __xprt_set_raddr(SVCXPRT *, const struct sockaddr_storage *);
-
-/* Evaluate to actual length of the `sockaddr_un' structure, whether
- * abstract or not.
- */
-#include <stddef.h>
-#define SUN_LEN_A(ptr) (offsetof(struct sockaddr_un, sun_path)	\
-			+ 1 + strlen((ptr)->sun_path + 1))
-
-extern int __svc_maxrec;
-
-extern int __svc_mtmode;
-extern int __svc_thrmax;
-extern int __svc_idlecleanup;
+extern void setrpcent(int);
+extern void endrpcent(void);
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _TIRPC_RPCCOM_H */
+#endif /* !_RPC_CENT_H */

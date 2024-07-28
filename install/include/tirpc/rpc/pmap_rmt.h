@@ -1,5 +1,7 @@
+/*	$NetBSD: pmap_rmt.h,v 1.7 1998/02/11 23:01:23 lukem Exp $	*/
+
 /*
- * Copyright (c) 2015, Axentia Technologies AB.
+ * Copyright (c) 2009, Sun Microsystems, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,6 +11,9 @@
  * - Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
+ * - Neither the name of Sun Microsystems, Inc. nor the names of its
+ *   contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -22,56 +27,41 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
+ *	from: @(#)pmap_rmt.h 1.2 88/02/08 SMI
+ *	from: @(#)pmap_rmt.h	2.1 88/07/29 4.0 RPCSRC
+ * $FreeBSD: src/include/rpc/pmap_rmt.h,v 1.12 2002/03/23 17:24:55 imp Exp $
  */
 
 /*
- * svc_mt.h, Server-side transport extensions
+ * Structures and XDR routines for parameters to and replies from
+ * the portmapper remote-call-service.
+ *
+ * Copyright (C) 1986, Sun Microsystems, Inc.
  */
 
-#ifndef _TIRPC_SVC_MT_H
-#define _TIRPC_SVC_MT_H
+#ifndef _RPC_PMAP_RMT_H
+#define _RPC_PMAP_RMT_H
 
-#include <semaphore.h>
+struct rmtcallargs {
+	u_long prog, vers, proc, arglen;
+	caddr_t args_ptr;
+	xdrproc_t xdr_args;
+};
 
-typedef struct __rpc_svcxprt_ext {
-	int 		flags;
-	SVCAUTH		xp_auth;
-	void            *prv;
-} SVCXPRT_EXT;
+struct rmtcallres {
+	u_long *port_ptr;
+	u_long resultslen;
+	caddr_t results_ptr;
+	xdrproc_t xdr_results;
+};
 
-typedef enum {
-    THREAD_IDLE,
-    THREAD_PENDING,
-    THREAD_WIP,
-    THREAD_KILL
-} ThreadState;
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern bool_t xdr_rmtcall_args(XDR *, struct rmtcallargs *);
+extern bool_t xdr_rmtcallres(XDR *, struct rmtcallres *);
+#ifdef __cplusplus
+}
+#endif
 
-
-typedef struct __rpc_svcxprt_ext_prv {
-       int             fd;
-       ThreadState     state;
-       pthread_t       thread_id;
-       pthread_attr_t  attr;
-       pthread_mutex_t mutex;
-       pthread_cond_t cond;
-} SVCXPRT_EXT_PRV;
-
-
-#define SVCEXT(xprt)					\
-	((SVCXPRT_EXT *)(xprt)->xp_p3)
-
-#define SVC_XP_PRV(xprt)                               \
-       (SVCEXT(xprt)->prv)
-
-#define SVC_XP_AUTH(xprt)				\
-	(SVCEXT(xprt)->xp_auth)
-
-#define SVC_VERSQUIET 0x0001	/* keep quiet about version mismatch */
-
-#define svc_flags(xprt)					\
-	(SVCEXT(xprt)->flags)
-
-#define version_keepquiet(xprt)				\
-	(svc_flags(xprt) & SVC_VERSQUIET)
-
-#endif /* !_TIRPC_SVC_MT_H */
+#endif /* !_RPC_PMAP_RMT_H */

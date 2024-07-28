@@ -1,3 +1,5 @@
+/*  @(#)des.h	2.2 88/08/10 4.0 RPCSRC; from 2.7 88/02/08 SMI  */
+/* $FreeBSD: src/include/rpc/des.h,v 1.4 2002/03/23 17:24:55 imp Exp $ */
 /*
  * Copyright (c) 2009, Sun Microsystems, Inc.
  * All rights reserved.
@@ -26,55 +28,60 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /*
- * Copyright (c) 1986 - 1991 by Sun Microsystems, Inc.
+ * Generic DES driver interface
+ * Keep this file hardware independent!
+ * Copyright (c) 1986 by Sun Microsystems, Inc.
+ */
+
+#ifndef _RPC_DES_H_
+#define _RPC_DES_H_
+
+#define DES_MAXLEN 	65536	/* maximum # of bytes to encrypt  */
+#define DES_QUICKLEN	16	/* maximum # of bytes to encrypt quickly */
+
+enum desdir { ENCRYPT, DECRYPT };
+enum desmode { CBC, ECB };
+
+/*
+ * parameters to ioctl call
+ */
+struct desparams {
+	u_char des_key[8];	/* key (with low bit parity) */
+	enum desdir des_dir;	/* direction */
+	enum desmode des_mode;	/* mode */
+	u_char des_ivec[8];	/* input vector */
+	unsigned des_len;	/* number of bytes to crypt */
+	union {
+		u_char UDES_data[DES_QUICKLEN];
+		u_char *UDES_buf;
+	} UDES;
+#	define des_data UDES.UDES_data	/* direct data here if quick */
+#	define des_buf	UDES.UDES_buf	/* otherwise, pointer to data */
+};
+
+#ifdef notdef
+
+/*
+ * These ioctls are only implemented in SunOS. Maybe someday
+ * if somebody writes a driver for DES hardware that works
+ * with FreeBSD, we can being that back.
  */
 
 /*
- * rpc_com.h, Common definitions for both the server and client side.
- * All for the topmost layer of rpc
- *
- * In Sun's tirpc distribution, this was installed as <rpc/rpc_com.h>,
- * but as it contains only non-exported interfaces, it was moved here.
+ * Encrypt an arbitrary sized buffer
  */
+#define	DESIOCBLOCK	_IOWR('d', 6, struct desparams)
 
-#ifndef _TIRPC_RPCCOM_H
-#define	_TIRPC_RPCCOM_H
+/* 
+ * Encrypt of small amount of data, quickly
+ */
+#define DESIOCQUICK	_IOWR('d', 7, struct desparams) 
 
-#include <rpc/rpc_com.h>
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
-struct netbuf *__rpc_set_netbuf(struct netbuf *, const void *, size_t);
-
-struct netbuf *__rpcb_findaddr_timed(rpcprog_t, rpcvers_t,
-    const struct netconfig *, const char *host, CLIENT **clpp,
-    struct timeval *tp);
-
-bool_t __rpc_control(int,void *);
-
-bool_t __svc_clean_idle(fd_set *, int, bool_t);
-bool_t __xdrrec_setnonblock(XDR *, int);
-bool_t __xdrrec_getrec(XDR *, enum xprt_stat *, bool_t);
-void __xprt_unregister_unlocked(SVCXPRT *);
-void __xprt_set_raddr(SVCXPRT *, const struct sockaddr_storage *);
-
-/* Evaluate to actual length of the `sockaddr_un' structure, whether
- * abstract or not.
+/*
+ * Software DES.
  */
-#include <stddef.h>
-#define SUN_LEN_A(ptr) (offsetof(struct sockaddr_un, sun_path)	\
-			+ 1 + strlen((ptr)->sun_path + 1))
+extern int _des_crypt( char *, unsigned, struct desparams * );
 
-extern int __svc_maxrec;
-
-extern int __svc_mtmode;
-extern int __svc_thrmax;
-extern int __svc_idlecleanup;
-
-#ifdef __cplusplus
-}
 #endif
-
-#endif /* _TIRPC_RPCCOM_H */

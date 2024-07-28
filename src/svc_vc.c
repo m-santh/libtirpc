@@ -428,8 +428,15 @@ __svc_vc_dodestroy(xprt)
 	SVCXPRT_EXT *ext = SVCEXT(xprt);
 	struct cf_conn *cd;
 	struct cf_rendezvous *r;
+	SVCXPRT_EXT_PRV *prv = (SVCXPRT_EXT_PRV *)SVC_XP_PRV(xprt);
+	extern void prv_destroy(SVCXPRT_EXT_PRV *prv);
 
 	cd = (struct cf_conn *)xprt->xp_p1;
+
+	if(prv) {
+               prv_destroy(prv);
+               SVC_XP_PRV(xprt) = NULL;
+       }
 
 	if (xprt->xp_fd != RPC_ANYFD)
 		(void)close(xprt->xp_fd);

@@ -812,8 +812,26 @@ rpc_control (int what, void *arg)
     case RPC_SVC_CONNMAXREC_GET:
       *(int *) arg = __svc_maxrec;
       return TRUE;
+      case RPC_SVC_MTMODE_SET:
+       val = *(int *) arg;
+       printf("set mode = %d\n", val);
+       if (val < RPC_SVC_MT_NONE || val > RPC_SVC_MT_AUTO)
+         return FALSE;
+       __svc_mtmode = val;
+       return TRUE;
+     case RPC_SVC_MTMODE_GET:
+       printf("get mode = %d\n", __svc_mtmode);
+       *(int *) arg = __svc_mtmode;
+       return TRUE;
     default:
       break;
     }
   return FALSE;
+}
+
+SVCXPRT *get_svc_xprt(int sock) 
+{
+  assert (__svc_xports != NULL);
+
+  return __svc_xports[sock];
 }
